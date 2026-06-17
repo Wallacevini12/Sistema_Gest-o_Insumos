@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etiqueta</title>
+  <style>
+    /* Define o tamanho do papel para 100x50mm, sem margens da impressora */
+    @page {
+      size: 100mm 50mm;
+      margin: 0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100mm;
+      height: 50mm;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    .etiqueta {
+      width: 100mm;
+      height: 50mm;
+      display: flex;
+      align-items: center;
+      padding: 3mm;
+      gap: 3mm;
+    }
+    .qr {
+      width: 44mm;
+      height: 44mm;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qr img { width: 44mm; height: 44mm; image-rendering: pixelated; }
+    .dados {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1mm;
+    }
+    .num { font-size: 7mm; font-weight: 700; line-height: 1; }
+    .tipo {
+      font-size: 4mm; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .3mm;
+    }
+    .marca { font-size: 4.5mm; font-weight: 600; }
+    .desc {
+      font-size: 3.5mm; color: #222;
+      overflow-wrap: break-word; word-break: break-word;
+    }
+    .erro { padding: 5mm; font-family: Arial; font-size: 4mm; color: #b00; }
+    /* Barra de ações que NÃO sai na impressão */
+    .barra {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1f2937; padding: 10px; text-align: center; display: flex; gap: 8px; justify-content: center;
+    }
+    .barra button {
+      background: #2563eb; color: #fff; border: none; border-radius: 6px;
+      padding: 9px 18px; font-size: 14px; font-family: Arial; cursor: pointer;
+    }
+    .barra button.sec { background: #e5e7eb; color: #111; }
+    @media print { .barra { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="alvo"><p class="erro">Carregando etiqueta...</p></div>
+  <div class="barra">
+    <button onclick="window.print()">Imprimir etiqueta</button>
+    <button class="sec" onclick="window.close()">Fechar</button>
+  </div>
+
+  <script>
+    const id = new URLSearchParams(location.search).get('item');
+    const alvo = document.getElementById('alvo');
+
+    if (!id) {
+      alvo.innerHTML = '<p class="erro">Item não informado.</p>';
+    } else {
+      fetch(`/api/itens/${id}`)
+        .then(r => { if (!r.ok) throw new Error('Item não encontrado'); return r.json(); })
+        .then(item => {
+          alvo.innerHTML = `
+            <div class="etiqueta">
+              <div class="qr"><img src="/api/qrcode/${item.id}" alt="QR"></div>
+              <div class="dados">
+                <div class="num">#${item.id}</div>
+                <div class="tipo">${item.tipo}</div>
+                <div class="marca">${item.marca}</div>
+                ${item.descricao ? `<div class="desc">${item.descricao}</div>` : ''}
+              </div>
+            </div>`;
+          document.title = `Etiqueta #${item.id}`;
+        })
+        .catch(e => { alvo.innerHTML = `<p class="erro">${e.message}</p>`; });
+    }
+  </script>
+</body>
+</html>

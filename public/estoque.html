@@ -34,7 +34,7 @@
                 <td><span class="badge">${i.tipo}</span></td>
                 <td>${i.marca}${i.descricao ? '<br><span class="muted">' + i.descricao + '</span>' : ''}</td>
                 <td class="${i.quantidade <= 5 ? 'estoque-baixo' : ''}">${i.quantidade} un.</td>
-                <td><a href="/api/qrcode/${i.id}" target="_blank"><button class="secundario">Etiqueta</button></a></td>
+                <td><a href="etiqueta.html?item=${i.id}" target="_blank"><button class="secundario">Etiqueta</button></a></td>
               </tr>
             `).join('')}
           </tbody>
