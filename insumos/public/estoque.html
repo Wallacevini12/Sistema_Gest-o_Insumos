@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque — Gestão de insumos</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header><h1>Estoque atual</h1></header>
+  <nav>
+    <a href="index.html">Cadastrar caixa</a>
+    <a href="estoque.html" class="ativo">Estoque</a>
+    <a href="historico.html">Histórico</a>
+  </nav>
+  <main>
+    <div class="card">
+      <h2>Caixas cadastradas</h2>
+      <div id="tabela"><p class="muted">Carregando...</p></div>
+    </div>
+  </main>
+
+  <script>
+    fetch('/api/itens').then(r => r.json()).then(itens => {
+      const div = document.getElementById('tabela');
+      if (!itens.length) { div.innerHTML = '<p class="muted">Nenhuma caixa cadastrada ainda.</p>'; return; }
+      div.innerHTML = `
+        <table>
+          <thead><tr><th>#</th><th>Tipo</th><th>Marca / descrição</th><th>Estoque</th><th></th></tr></thead>
+          <tbody>
+            ${itens.map(i => `
+              <tr>
+                <td>${i.id}</td>
+                <td><span class="badge">${i.tipo}</span></td>
+                <td>${i.marca}${i.descricao ? '<br><span class="muted">' + i.descricao + '</span>' : ''}</td>
+                <td class="${i.quantidade <= 5 ? 'estoque-baixo' : ''}">${i.quantidade} un.</td>
+                <td><a href="/api/qrcode/${i.id}" target="_blank"><button class="secundario">Etiqueta</button></a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    });
+  </script>
+</body>
+</html>

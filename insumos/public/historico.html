@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico — Gestão de insumos</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header><h1>Histórico de retiradas</h1></header>
+  <nav>
+    <a href="index.html">Cadastrar caixa</a>
+    <a href="estoque.html">Estoque</a>
+    <a href="historico.html" class="ativo">Histórico</a>
+  </nav>
+  <main>
+    <div class="card">
+      <h2>Últimas retiradas</h2>
+      <div id="tabela"><p class="muted">Carregando...</p></div>
+    </div>
+  </main>
+
+  <script>
+    function fmt(d) {
+      const dt = new Date(d);
+      return dt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    fetch('/api/retiradas').then(r => r.json()).then(rows => {
+      const div = document.getElementById('tabela');
+      if (!rows.length) { div.innerHTML = '<p class="muted">Nenhuma retirada registrada ainda.</p>'; return; }
+      div.innerHTML = `
+        <table>
+          <thead><tr><th>Data</th><th>Item</th><th>Máquina</th><th>Operador</th><th>Qtd</th></tr></thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td>${fmt(r.retirado_em)}</td>
+                <td><span class="badge">${r.tipo}</span> ${r.marca}</td>
+                <td>${r.maquina}</td>
+                <td>${r.operador || '<span class="muted">—</span>'}</td>
+                <td>${r.quantidade}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    });
+  </script>
+</body>
+</html>

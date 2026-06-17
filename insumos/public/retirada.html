@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retirada — Gestão de insumos</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header><h1>Retirada de insumo</h1></header>
+  <nav>
+    <a href="index.html">Cadastrar caixa</a>
+    <a href="estoque.html">Estoque</a>
+    <a href="historico.html">Histórico</a>
+  </nav>
+  <main>
+    <div class="card" id="conteudo">
+      <p class="muted">Carregando item...</p>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const itemId = params.get('item');
+    const cont = document.getElementById('conteudo');
+
+    if (!itemId) {
+      cont.innerHTML = '<div class="aviso erro">Nenhum item informado. Escaneie o QR code de uma caixa.</div>';
+    } else {
+      carregar();
+    }
+
+    async function carregar() {
+      try {
+        const r = await fetch(`/api/itens/${itemId}`);
+        if (!r.ok) throw new Error('Item não encontrado');
+        const item = await r.json();
+        renderForm(item);
+      } catch (e) {
+        cont.innerHTML = `<div class="aviso erro">${e.message}</div>`;
+      }
+    }
+
+    function renderForm(item) {
+      cont.innerHTML = `
+        <h2>#${item.id} — ${item.tipo}</h2>
+        <div class="item-info">
+          <div class="linha"><span>Marca</span><span>${item.marca}</span></div>
+          ${item.descricao ? `<div class="linha"><span>Descrição</span><span>${item.descricao}</span></div>` : ''}
+          <div class="linha"><span>Em estoque</span><span class="${item.quantidade <= 5 ? 'estoque-baixo' : ''}">${item.quantidade} un.</span></div>
+        </div>
+        <div id="msg"></div>
+        <div class="campo">
+          <label for="maquina">Máquina</label>
+          <input id="maquina" placeholder="Ex.: Torno CNC 02">
+        </div>
+        <div class="campo">
+          <label for="operador">Operador (opcional)</label>
+          <input id="operador" placeholder="Seu nome">
+        </div>
+        <div class="campo">
+          <label for="qtd">Quantidade retirada</label>
+          <input id="qtd" type="number" min="1" max="${item.quantidade}" value="1">
+        </div>
+        <button id="confirmar">Confirmar retirada</button>
+      `;
+      document.getElementById('confirmar').addEventListener('click', () => confirmar(item));
+    }
+
+    async function confirmar(item) {
+      const btn = document.getElementById('confirmar');
+      const msg = document.getElementById('msg');
+      const maquina = document.getElementById('maquina').value.trim();
+      const operador = document.getElementById('operador').value.trim();
+      const qtd = Number(document.getElementById('qtd').value);
+
+      if (!maquina) { msg.innerHTML = '<div class="aviso erro">Informe a máquina.</div>'; return; }
+      if (!qtd || qtd < 1) { msg.innerHTML = '<div class="aviso erro">Quantidade inválida.</div>'; return; }
+
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/retiradas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_id: item.id, maquina, operador, quantidade: qtd })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.erro || 'Erro ao registrar');
+        cont.innerHTML = `
+          <div class="aviso sucesso">Retirada registrada! ${qtd} un. de ${item.tipo} (${item.marca}) para ${maquina}.</div>
+          <div class="item-info">
+            <div class="linha"><span>Novo estoque</span><span>${item.quantidade - qtd} un.</span></div>
+          </div>
+          <button class="secundario" onclick="location.reload()">Nova retirada desta caixa</button>
+        `;
+      } catch (e) {
+        msg.innerHTML = `<div class="aviso erro">${e.message}</div>`;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

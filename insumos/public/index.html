@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de caixa — Gestão de insumos</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header><h1>Gestão de insumos</h1></header>
+  <nav>
+    <a href="index.html" class="ativo">Cadastrar caixa</a>
+    <a href="estoque.html">Estoque</a>
+    <a href="historico.html">Histórico</a>
+  </nav>
+  <main>
+    <div class="card" id="form-card">
+      <h2>Nova caixa</h2>
+      <div id="msg"></div>
+      <div class="campo">
+        <label for="tipo">Tipo</label>
+        <select id="tipo"></select>
+      </div>
+      <div class="campo">
+        <label for="marca">Marca</label>
+        <input id="marca" placeholder="Ex.: Sandvik, Iscar, Mitsubishi">
+      </div>
+      <div class="campo">
+        <label for="descricao">Descrição / código (opcional)</label>
+        <input id="descricao" placeholder="Ex.: CNMG 120408">
+      </div>
+      <div class="campo">
+        <label for="quantidade">Quantidade inicial</label>
+        <input id="quantidade" type="number" min="1" value="10">
+      </div>
+      <button id="salvar">Cadastrar e gerar etiqueta</button>
+    </div>
+
+    <div class="card" id="etiqueta-card" style="display:none">
+      <h2>Etiqueta gerada</h2>
+      <div class="qr-area">
+        <div id="etiqueta-info"></div>
+        <img id="qr-img" alt="QR code">
+        <p class="muted" style="margin-top:12px">Cole esta etiqueta na caixa. O operador escaneia com a câmera do celular.</p>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center" class="nao-imprime">
+        <button onclick="window.print()">Imprimir etiqueta</button>
+        <button class="secundario" onclick="location.reload()">Cadastrar outra</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const sel = document.getElementById('tipo');
+    fetch('/api/tipos').then(r => r.json()).then(tipos => {
+      sel.innerHTML = tipos.map(t => `<option>${t}</option>`).join('');
+    });
+
+    document.getElementById('salvar').addEventListener('click', async () => {
+      const btn = document.getElementById('salvar');
+      const msg = document.getElementById('msg');
+      const tipo = sel.value;
+      const marca = document.getElementById('marca').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
+      const quantidade = document.getElementById('quantidade').value;
+
+      if (!marca || !quantidade || quantidade < 1) {
+        msg.innerHTML = '<div class="aviso erro">Preencha marca e quantidade válida.</div>';
+        return;
+      }
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/itens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, marca, descricao, quantidade })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.erro || 'Erro ao salvar');
+
+        document.getElementById('form-card').style.display = 'none';
+        document.getElementById('etiqueta-card').style.display = 'block';
+        document.getElementById('etiqueta-info').innerHTML =
+          `<p style="font-weight:600;margin-bottom:4px">#${data.id} — ${tipo}</p>
+           <p class="muted" style="margin-bottom:16px">${marca}${descricao ? ' · ' + descricao : ''} · ${quantidade} un.</p>`;
+        document.getElementById('qr-img').src = `/api/qrcode/${data.id}`;
+      } catch (e) {
+        msg.innerHTML = `<div class="aviso erro">${e.message}</div>`;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
