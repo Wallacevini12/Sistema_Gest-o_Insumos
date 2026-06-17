@@ -18,39 +18,40 @@
       background: #fff;
       color: #000;
     }
+    /* A página é 100x50mm, mas o conteúdo ocupa só 60x30mm no canto superior esquerdo */
     .etiqueta {
-      width: 100mm;
-      height: 50mm;
+      width: 60mm;
+      height: 30mm;
       display: flex;
       align-items: center;
-      padding: 3mm;
-      gap: 3mm;
+      padding: 1.5mm;
+      gap: 1.5mm;
     }
     .qr {
-      width: 44mm;
-      height: 44mm;
+      width: 27mm;
+      height: 27mm;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .qr img { width: 44mm; height: 44mm; image-rendering: pixelated; }
+    .qr img { width: 27mm; height: 27mm; image-rendering: pixelated; }
     .dados {
       flex: 1;
       min-width: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 1mm;
+      gap: 0.5mm;
     }
-    .num { font-size: 7mm; font-weight: 700; line-height: 1; }
+    .num { font-size: 4.5mm; font-weight: 700; line-height: 1; }
     .tipo {
-      font-size: 4mm; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .3mm;
+      font-size: 2.6mm; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .2mm;
     }
-    .marca { font-size: 4.5mm; font-weight: 600; }
+    .marca { font-size: 2.9mm; font-weight: 600; }
     .desc {
-      font-size: 3.5mm; color: #222;
+      font-size: 2.3mm; color: #222;
       overflow-wrap: break-word; word-break: break-word;
     }
     .erro { padding: 5mm; font-family: Arial; font-size: 4mm; color: #b00; }
