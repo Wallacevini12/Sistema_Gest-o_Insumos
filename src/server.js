@@ -106,6 +106,42 @@ app.get('/api/retiradas', async (req, res) => {
   }
 });
 
+// Repõe estoque de uma caixa (soma quantidade)
+app.post('/api/itens/:id/repor', async (req, res) => {
+  const quantidade = Number(req.body.quantidade);
+  if (!quantidade || quantidade <= 0) {
+    return res.status(400).json({ erro: 'quantidade deve ser positiva' });
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.query('SELECT quantidade FROM itens WHERE id = ? FOR UPDATE', [req.params.id]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ erro: 'Item não encontrado' });
+    }
+    await conn.query('UPDATE itens SET quantidade = quantidade + ? WHERE id = ?', [quantidade, req.params.id]);
+    await conn.commit();
+    res.json({ ok: true, quantidade: rows[0].quantidade + quantidade });
+  } catch (e) {
+    await conn.rollback();
+    res.status(500).json({ erro: e.message });
+  } finally {
+    conn.release();
+  }
+});
+
+// Remove uma caixa (e seu histórico, via ON DELETE CASCADE)
+app.delete('/api/itens/:id', async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM itens WHERE id = ?', [req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ erro: 'Item não encontrado' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // Gera o QR code (PNG) que aponta para a tela de retirada do item
 app.get('/api/qrcode/:id', async (req, res) => {
   try {

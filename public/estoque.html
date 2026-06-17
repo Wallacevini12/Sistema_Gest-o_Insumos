@@ -14,6 +14,7 @@
     <a href="historico.html">Histórico</a>
   </nav>
   <main>
+    <div id="alerta-baixo"></div>
     <div class="card">
       <h2>Caixas cadastradas</h2>
       <div id="tabela"><p class="muted">Carregando...</p></div>
@@ -21,26 +22,80 @@
   </main>
 
   <script>
-    fetch('/api/itens').then(r => r.json()).then(itens => {
+    const LIMITE_BAIXO = 3; // estoque abaixo disso = alerta vermelho
+
+    function carregar() {
+      fetch('/api/itens').then(r => r.json()).then(render);
+    }
+
+    function render(itens) {
       const div = document.getElementById('tabela');
+      const alerta = document.getElementById('alerta-baixo');
+
+      const baixos = itens.filter(i => i.quantidade < LIMITE_BAIXO);
+      if (baixos.length) {
+        alerta.innerHTML = `
+          <div class="aviso-topo">
+            <strong>&#9888; Atenção:</strong> ${baixos.length} ${baixos.length === 1 ? 'insumo está' : 'insumos estão'} com estoque baixo (menos de ${LIMITE_BAIXO} un.):
+            ${baixos.map(i => `#${i.id} ${i.tipo}/${i.marca} (${i.quantidade})`).join(', ')}
+          </div>`;
+      } else {
+        alerta.innerHTML = '';
+      }
+
       if (!itens.length) { div.innerHTML = '<p class="muted">Nenhuma caixa cadastrada ainda.</p>'; return; }
       div.innerHTML = `
         <table>
-          <thead><tr><th>#</th><th>Tipo</th><th>Marca / descrição</th><th>Estoque</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th>Tipo</th><th>Marca / descrição</th><th>Estoque</th><th>Ações</th></tr></thead>
           <tbody>
             ${itens.map(i => `
-              <tr>
+              <tr class="${i.quantidade < LIMITE_BAIXO ? 'linha-baixa' : ''}">
                 <td>${i.id}</td>
                 <td><span class="badge">${i.tipo}</span></td>
                 <td>${i.marca}${i.descricao ? '<br><span class="muted">' + i.descricao + '</span>' : ''}</td>
-                <td class="${i.quantidade <= 5 ? 'estoque-baixo' : ''}">${i.quantidade} un.</td>
-                <td><a href="etiqueta.html?item=${i.id}" target="_blank"><button class="secundario">Etiqueta</button></a></td>
+                <td class="${i.quantidade < LIMITE_BAIXO ? 'estoque-baixo' : ''}">${i.quantidade} un.</td>
+                <td>
+                  <div class="acoes">
+                    <a href="etiqueta.html?item=${i.id}" target="_blank"><button class="secundario">Etiqueta</button></a>
+                    <button class="secundario" onclick="repor(${i.id}, '${i.tipo}', '${i.marca.replace(/'/g, "\\'")}')">Repor</button>
+                    <button class="perigo" onclick="remover(${i.id}, '${i.tipo}', '${i.marca.replace(/'/g, "\\'")}')">Remover</button>
+                  </div>
+                </td>
               </tr>
             `).join('')}
           </tbody>
         </table>
       `;
-    });
+    }
+
+    async function repor(id, tipo, marca) {
+      const qtd = prompt(`Repor estoque de #${id} (${tipo} / ${marca}).\nQuantas unidades chegaram?`);
+      if (qtd === null) return;
+      const n = Number(qtd);
+      if (!n || n <= 0) { alert('Informe um número maior que zero.'); return; }
+      try {
+        const r = await fetch(`/api/itens/${id}/repor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantidade: n })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.erro || 'Erro ao repor');
+        carregar();
+      } catch (e) { alert(e.message); }
+    }
+
+    async function remover(id, tipo, marca) {
+      if (!confirm(`Remover a caixa #${id} (${tipo} / ${marca})?\nO histórico de retiradas dessa caixa também será apagado. Esta ação não pode ser desfeita.`)) return;
+      try {
+        const r = await fetch(`/api/itens/${id}`, { method: 'DELETE' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.erro || 'Erro ao remover');
+        carregar();
+      } catch (e) { alert(e.message); }
+    }
+
+    carregar();
   </script>
 </body>
 </html>

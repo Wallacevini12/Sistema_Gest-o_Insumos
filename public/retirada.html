@@ -47,7 +47,7 @@
         <div class="item-info">
           <div class="linha"><span>Marca</span><span>${item.marca}</span></div>
           ${item.descricao ? `<div class="linha"><span>Descrição</span><span>${item.descricao}</span></div>` : ''}
-          <div class="linha"><span>Em estoque</span><span class="${item.quantidade <= 5 ? 'estoque-baixo' : ''}">${item.quantidade} un.</span></div>
+          <div class="linha"><span>Em estoque</span><span class="${item.quantidade < 3 ? 'estoque-baixo' : ''}">${item.quantidade} un.</span></div>
         </div>
         <div id="msg"></div>
         <div class="campo">
