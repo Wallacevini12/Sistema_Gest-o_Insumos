@@ -86,20 +86,6 @@ th { font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing:
   .card { border: none; }
 }
 
-/* Aviso de estoque baixo no topo da página */
-.aviso-topo {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-left: 4px solid #dc2626;
-  color: #991b1b;
-  padding: 14px 18px;
-  border-radius: 10px;
-  font-size: 14px;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-.aviso-topo strong { color: #dc2626; }
-
 /* Linha de item com estoque baixo */
 tr.linha-baixa { background: #fef2f2; }
 tr.linha-baixa td { color: #991b1b; }
@@ -111,3 +97,89 @@ tr.linha-baixa td { color: #991b1b; }
 /* Botão de remover (perigo) */
 button.perigo { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
 button.perigo:hover { background: #fef2f2; }
+
+/* Header com sino de notificação */
+header.com-sino { display: flex; align-items: center; justify-content: space-between; }
+.sino-wrap { position: relative; }
+.sino {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .15s, color .15s;
+}
+.sino:hover { background: rgba(255,255,255,.1); color: #fff; }
+.sino.tem-alerta { color: #fff; }
+.sino-badge {
+  position: absolute;
+  top: 0; right: 0;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #1f2937;
+}
+
+/* Dropdown de notificações */
+.sino-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-width: 90vw;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  z-index: 50;
+}
+.sino-dropdown-head {
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-radius: 12px 12px 0 0;
+}
+.sino-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f5f5f5;
+}
+.sino-item:last-child { border-bottom: none; }
+.sino-item-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sino-item-nome { font-size: 14px; font-weight: 500; overflow-wrap: break-word; }
+.sino-item-qtd {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.sino-item-qtd.zero { color: #991b1b; background: #fee2e2; }
+.sino-vazio { padding: 20px 16px; font-size: 14px; color: #6b7280; text-align: center; }

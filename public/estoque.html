@@ -7,14 +7,28 @@
   <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-  <header><h1>Estoque atual</h1></header>
+  <header class="com-sino">
+    <h1>Estoque atual</h1>
+    <div class="sino-wrap">
+      <button id="sino" class="sino" aria-label="Notificações de estoque baixo">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span id="sino-badge" class="sino-badge" hidden>0</span>
+      </button>
+      <div id="sino-dropdown" class="sino-dropdown" hidden>
+        <div class="sino-dropdown-head">Estoque baixo (menos de <span id="limite-txt">3</span> un.)</div>
+        <div id="sino-lista"></div>
+      </div>
+    </div>
+  </header>
   <nav>
     <a href="index.html">Cadastrar caixa</a>
     <a href="estoque.html" class="ativo">Estoque</a>
     <a href="historico.html">Histórico</a>
   </nav>
   <main>
-    <div id="alerta-baixo"></div>
     <div class="card">
       <h2>Caixas cadastradas</h2>
       <div id="tabela"><p class="muted">Carregando...</p></div>
@@ -22,7 +36,8 @@
   </main>
 
   <script>
-    const LIMITE_BAIXO = 3; // estoque abaixo disso = alerta vermelho
+    const LIMITE_BAIXO = 3; // estoque abaixo disso = estoque baixo
+    document.getElementById('limite-txt').textContent = LIMITE_BAIXO;
 
     function carregar() {
       fetch('/api/itens').then(r => r.json()).then(render);
@@ -30,19 +45,34 @@
 
     function render(itens) {
       const div = document.getElementById('tabela');
-      const alerta = document.getElementById('alerta-baixo');
 
-      const baixos = itens.filter(i => i.quantidade < LIMITE_BAIXO);
+      // --- Notificação no sino ---
+      const baixos = itens.filter(i => i.quantidade < LIMITE_BAIXO)
+                          .sort((a, b) => a.quantidade - b.quantidade);
+      const badge = document.getElementById('sino-badge');
+      const lista = document.getElementById('sino-lista');
+      const sino = document.getElementById('sino');
+
       if (baixos.length) {
-        alerta.innerHTML = `
-          <div class="aviso-topo">
-            <strong>&#9888; Atenção:</strong> ${baixos.length} ${baixos.length === 1 ? 'insumo está' : 'insumos estão'} com estoque baixo (menos de ${LIMITE_BAIXO} un.):
-            ${baixos.map(i => `#${i.id} ${i.tipo}/${i.marca} (${i.quantidade})`).join(', ')}
-          </div>`;
+        badge.textContent = baixos.length;
+        badge.hidden = false;
+        sino.classList.add('tem-alerta');
+        lista.innerHTML = baixos.map(i => `
+          <div class="sino-item">
+            <div class="sino-item-info">
+              <span class="badge">${i.tipo}</span>
+              <span class="sino-item-nome">${i.marca}${i.descricao ? ' · ' + i.descricao : ''}</span>
+            </div>
+            <span class="sino-item-qtd ${i.quantidade === 0 ? 'zero' : ''}">${i.quantidade} un.</span>
+          </div>
+        `).join('');
       } else {
-        alerta.innerHTML = '';
+        badge.hidden = true;
+        sino.classList.remove('tem-alerta');
+        lista.innerHTML = '<div class="sino-vazio">Tudo certo! Nenhum item com estoque baixo.</div>';
       }
 
+      // --- Tabela ---
       if (!itens.length) { div.innerHTML = '<p class="muted">Nenhuma caixa cadastrada ainda.</p>'; return; }
       div.innerHTML = `
         <table>
@@ -67,6 +97,19 @@
         </table>
       `;
     }
+
+    // Abrir/fechar dropdown do sino
+    const sinoBtn = document.getElementById('sino');
+    const dropdown = document.getElementById('sino-dropdown');
+    sinoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.hidden = !dropdown.hidden;
+    });
+    document.addEventListener('click', (e) => {
+      if (!dropdown.hidden && !dropdown.contains(e.target) && !sinoBtn.contains(e.target)) {
+        dropdown.hidden = true;
+      }
+    });
 
     async function repor(id, tipo, marca) {
       const qtd = prompt(`Repor estoque de #${id} (${tipo} / ${marca}).\nQuantas unidades chegaram?`);
