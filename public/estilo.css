@@ -183,3 +183,7 @@ header.com-sino { display: flex; align-items: center; justify-content: space-bet
 }
 .sino-item-qtd.zero { color: #991b1b; background: #fee2e2; }
 .sino-vazio { padding: 20px 16px; font-size: 14px; color: #6b7280; text-align: center; }
+
+/* Link de sair na navegação */
+nav a.sair { margin-left: auto; color: #dc2626; }
+nav a.sair:hover { color: #991b1b; }

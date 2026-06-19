@@ -27,6 +27,8 @@
     <a href="index.html">Cadastrar caixa</a>
     <a href="estoque.html" class="ativo">Estoque</a>
     <a href="historico.html">Histórico</a>
+    <a href="#" onclick="sair(event)" class="sair">Sair</a>
+
   </nav>
   <main>
     <div class="card">
@@ -139,6 +141,13 @@
     }
 
     carregar();
+  </script>
+  <script>
+    async function sair(e) {
+      e.preventDefault();
+      try { await fetch("/api/logout", { method: "POST" }); } catch (_) {}
+      location.href = "/login.html";
+    }
   </script>
 </body>
 </html>

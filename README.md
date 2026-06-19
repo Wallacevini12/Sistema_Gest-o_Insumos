@@ -51,3 +51,21 @@ public/         as 4 telas em HTML/CSS/JS puro
 - Tipos disponíveis estão em `TIPOS` no `server.js`. Para adicionar (ex.: "Alargadores"),
   edite essa lista.
 - Estoque ≤ 5 unidades aparece em vermelho.
+
+## Acesso restrito (senha)
+
+As telas de gestão (cadastrar caixa, estoque, histórico) exigem login com uma
+senha única compartilhada. A tela de retirada acessada via QR code continua
+livre — o operador escaneia e dá baixa sem senha.
+
+Defina a senha na variável de ambiente `APP_SENHA`:
+
+- **No Railway:** serviço da app → aba **Variables** → New Variable →
+  `APP_SENHA` = sua senha.
+- **Local:** no `.env`, `APP_SENHA=...`
+
+Para trocar a senha depois, basta alterar `APP_SENHA` e redeployar. As sessões
+abertas continuam válidas por até 12h; para invalidar todas imediatamente,
+defina também `APP_SESSION_SECRET` com qualquer texto novo.
+
+Sair: há um link "Sair" na navegação das telas de gestão.

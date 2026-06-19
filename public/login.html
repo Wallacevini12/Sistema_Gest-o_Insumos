@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar — Gestão de insumos</title>
+  <link rel="stylesheet" href="estilo.css">
+  <style>
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    }
+    .login-card h1 { font-size: 20px; margin-bottom: 6px; }
+    .login-card p.sub { color: #6b7280; font-size: 14px; margin-bottom: 22px; }
+    .login-card button { width: 100%; margin-top: 4px; }
+    #msg { margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>Gestão de insumos</h1>
+      <p class="sub">Acesso restrito. Informe a senha para continuar.</p>
+      <div class="campo">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" autofocus>
+      </div>
+      <button id="entrar">Entrar</button>
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <script>
+    // Para onde voltar após o login (default: estoque)
+    const destino = new URLSearchParams(location.search).get('next') || 'estoque.html';
+
+    const input = document.getElementById('senha');
+    const btn = document.getElementById('entrar');
+    const msg = document.getElementById('msg');
+
+    async function entrar() {
+      const senha = input.value;
+      if (!senha) { msg.innerHTML = '<div class="aviso erro">Digite a senha.</div>'; return; }
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ senha })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.erro || 'Falha no login');
+        location.href = destino;
+      } catch (e) {
+        msg.innerHTML = `<div class="aviso erro">${e.message}</div>`;
+        btn.disabled = false;
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    btn.addEventListener('click', entrar);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
+  </script>
+</body>
+</html>
